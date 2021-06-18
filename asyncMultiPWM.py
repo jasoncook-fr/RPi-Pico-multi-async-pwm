@@ -5,14 +5,14 @@
 from machine import Pin, PWM
 from utime import sleep, ticks_us
 
-# Modifiable PWM variables. 3 prepared here. 
+# Modifiable PWM variables. 3 prepared here.
 # Add as many as you like (16 max on raspberry pico)
 numLeds = 3
-ledPin = [15, 14, 12]
-dutyDelay = [900, 1800, 500] # in microseconds. no effect under 500
+ledPin = [15, 14, 13]
+dutyDelay = [900, 1200, 500] # in microseconds. no effect under 500
 minBright = 0
 maxBright = 65500
-rampStep = 50 # increase or decrease to change PWM ramp resolution (affects ramp speed)
+rampStep = 100 # increase or decrease to change PWM ramp resolution (affects ramp speed)
 
 # following variables not to be modified
 led = []
@@ -32,6 +32,12 @@ for x in range(numLeds):
 while True:
     for i in range(numLeds):
         currentTime = ticks_us()
+
+        # reset previousTime variable if our timer returns to zero
+        if currentTime < previousTime[0]:
+            for x in range(numLeds):
+                previousTime[x] = 0
+
         if (currentTime - previousTime[i]) >= dutyDelay[i]:
             previousTime[i] = currentTime
 
@@ -39,11 +45,10 @@ while True:
                 ledDuty[i] += rampStep
                 if ledDuty[i] is maxBright:
                     rampLedFlag[i] = False
-                    
+
             elif rampLedFlag[i] is False:
                 ledDuty[i] -= rampStep
                 if ledDuty[i] is minBright:
                     rampLedFlag[i] = True
-                  
-            led[i].duty_u16(ledDuty[i])
 
+            led[i].duty_u16(ledDuty[i])
